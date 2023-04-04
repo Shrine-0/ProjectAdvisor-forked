@@ -8,6 +8,9 @@ mysqlclient = "*"
 numpy = "*"
 django = "*"
 djangorestframework = "*"
+markdown = "*"
+django-filter = "*"
+dj-rest-auth = "*"
 
 [dev-packages]
 
