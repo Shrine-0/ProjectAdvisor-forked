@@ -11,6 +11,8 @@ djangorestframework = "*"
 markdown = "*"
 django-filter = "*"
 dj-rest-auth = "*"
+dj-rest-auth = {extras = ["with_social"], version = "*"}
+python-decouple = "*"
 
 [dev-packages]
 
