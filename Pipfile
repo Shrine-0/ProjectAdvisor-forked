@@ -8,6 +8,8 @@ mysqlclient = "*"
 numpy = "*"
 django = "*"
 djangorestframework = "*"
+dj-rest-auth = {extras = ["with_social"], version = "*"}
+python-decouple = "*"
 
 [dev-packages]
 
