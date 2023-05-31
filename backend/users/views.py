@@ -4,6 +4,13 @@ from rest_framework.views import APIView
 from users.serializers import UserRegistrationSerializers, UserLoginSerializer, UserProfileSerializer, UserChangePasswordSerializer, sendPasswordResetEmailSerializer, userPasswordResetSerializer
 from django.contrib.auth import authenticate
 from rest_framework.permissions import IsAuthenticated
+from datetime import timedelta
+
+
+# ==== For refresh Token ====
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
+
 
 # === adding custom renderer in view ===
 from users.render.renderers import UserRenderer
@@ -59,6 +66,52 @@ class UserLoginView(APIView):
                 return Response({'errors': {'non_field_errors': 'Email or password is not Valid'}}, status=status.HTTP_404_NOT_FOUND)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+from datetime import datetime, timedelta
+
+
+# === Token REFRESHER ===
+class UserTokenRefreshView(TokenObtainPairView):
+    renderer_classes = [UserRenderer]
+
+    def post(self, request, format=None):
+        authorization_header = request.headers.get('Authorization')
+        if authorization_header is None or not authorization_header.startswith('Bearer '):
+            return Response({'error': 'Invalid authorization header'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        refresh_token = authorization_header.split(' ')[1]
+
+        try:
+            refresh = RefreshToken(refresh_token)
+            refreshed_token = refresh.access_token
+
+            # Set the expiration time for the new token
+            expiry_time = timedelta(minutes=5)
+            expiry_timestamp = int((datetime.now() + expiry_time).timestamp())
+            refreshed_token.set_exp(expiry_timestamp)
+
+            return Response({'access': str(refreshed_token), 'refresh': str(refresh)}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserLogoutView(APIView):
+    def post(self, request, format=None):
+        refresh_token = request.data.get('refresh')
+
+        if not refresh_token:
+            return Response({'error': 'Refresh token is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 # === USER PROFILE ====
