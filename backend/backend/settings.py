@@ -40,6 +40,13 @@ INSTALLED_APPS = [
     
     #local
     'users',
+    
+    # === Income and Category ===
+    'Income_Category',
+    'Income',
+    
+    
+    # === Expenses and Category ===
 ]
 
 MIDDLEWARE = [
