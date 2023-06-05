@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from users.serializers import UserRegistrationSerializers, UserLoginSerializer, UserProfileSerializer, UserChangePasswordSerializer, sendPasswordResetEmailSerializer, userPasswordResetSerializer
 from django.contrib.auth import authenticate
 from rest_framework.permissions import IsAuthenticated
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 
 # ==== For refresh Token ====
@@ -68,8 +68,6 @@ class UserLoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-from datetime import datetime, timedelta
-
 
 # === Token REFRESHER ===
 class UserTokenRefreshView(TokenObtainPairView):
@@ -96,20 +94,20 @@ class UserTokenRefreshView(TokenObtainPairView):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserLogoutView(APIView):
-    def post(self, request, format=None):
-        refresh_token = request.data.get('refresh')
+# class UserLogoutView(APIView):
+#     def post(self, request, format=None):
+#         refresh_token = request.data.get('refresh')
 
-        if not refresh_token:
-            return Response({'error': 'Refresh token is required'}, status=status.HTTP_400_BAD_REQUEST)
+#         if not refresh_token:
+#             return Response({'error': 'Refresh token is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            token = RefreshToken(refresh_token)
-            token.blacklist()
+#         try:
+#             token = RefreshToken(refresh_token)
+#             token.blacklist()
 
-            return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+#             return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
+#         except Exception as e:
+#             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
