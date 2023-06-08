@@ -28,26 +28,43 @@ class IncomeListView(APIView):
             )
             
         
-    # # Inserting the Income
-    def post(self, request, format=None):
-        try:
-            data = request.data
-            income = Income.objects.create(
-                incCategory = data["incCategory"],
-                amount = data['amount'],
-                ntoe = data['note'],
-                user = request.user,
+    # Inserting/ Posting the Income
+    # def post(self, request, format=None):
+    #     try:
+    #         data = request.data
+    #         income = Income.objects.create(
+    #             incCategory = data["incCategory"],
+    #             amount = data['amount'],
+    #             ntoe = data['note'],
+    #             user = request.user,
                                 
-            )
+    #         )
             
-            serializer = IncomeSerializer(income, many =False)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #         serializer = IncomeSerializer(income, many =False)
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
         
+    #     except:
+    #         return Response(
+    #             data={"message": "Unable to Add New Income"}, status=status.HTTP_400_BAD_REQUEST
+    #         )
+
+    
+    def post(self, request):
+        try:
+            serializer = IncomeSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(user=request.user)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except:
             return Response(
-                data={"message": "Unable to Add New Income"}, status=status.HTTP_400_BAD_REQUEST
+                data={"message": "Unable to create income"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+
+
+    
 
     
 # === IncomeDetailView ===
