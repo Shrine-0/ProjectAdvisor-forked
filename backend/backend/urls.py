@@ -20,6 +20,10 @@ urlpatterns = [
     # === Adding urls of Income Category
     path('incomeCat/',include('Income_Category.urls')),
     
-    
+    # === URLS of Expenses
+    path('expenses/', include('Expenses.urls')),
+
+    # === Adding urls of Income Category
+    path('expensesCat/',include('Expenses_Category.urls')),
 
 ]

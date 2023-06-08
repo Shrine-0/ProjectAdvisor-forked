@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     
     
     # === Expenses and Category ===
+    'Expenses',
+    'Expenses_Category',
 ]
 
 MIDDLEWARE = [
