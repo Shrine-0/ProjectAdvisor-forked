@@ -34,7 +34,7 @@ class UserRegistrationView(APIView):
             # ==== calling the TOken generating function function and storing in the variable ====
             token = get_tokens_for_user(user)
 
-            return Response({'token': token, 'msg': 'User Successfully Created', 'data': serializer.data}, status=status.HTTP_201_CREATED)
+            return Response({'msg': 'User Successfully Created', 'data': serializer.data}, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

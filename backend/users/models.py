@@ -4,7 +4,7 @@ from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 
 # ===== Creating CUSTOM MANAGER =======
 class myManager(BaseUserManager):
-    def create_user(self, fName, lName,username, date_of_birth, email, tc, phone, password=None, password2=None):
+    def create_user(self, fName, lName,username, date_of_birth, email, tc, phone, password=None, password2=None,**extra_fields):
         # Creates and saves a User with the given email, name, tc, and password
         if not email:
             raise ValueError('Users must have an email address')
@@ -17,6 +17,7 @@ class myManager(BaseUserManager):
             lName=lName,
             phone=phone,
             tc=tc,
+            **extra_fields,
         )
 
         user.set_password(password)
