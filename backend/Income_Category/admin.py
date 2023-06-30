@@ -4,4 +4,4 @@ from .models import IncomeCategory
 
 @admin.register(IncomeCategory)
 class IncomeCategoryAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'user', 'date']
+    list_display = ['id', 'name',"image", 'user', 'date']

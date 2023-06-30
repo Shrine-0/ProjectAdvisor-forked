@@ -34,7 +34,7 @@ class ExpensesCategoryListView(APIView):
     def post(self, request):
         try:
             data = request.data
-            exCategory = ExpensesCategory.objects.create(name=data["name"], user=request.user)
+            exCategory = ExpensesCategory.objects.create(name=data["name"], image = data["image"], user=request.user)
             serializer = CategoryExpenseSerializer(exCategory, many=False)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except:
@@ -80,7 +80,7 @@ class ExpensesCategoryDetailView(APIView):
         exCategory = self.get_object(pk)
         if request.user == exCategory.user:
             try:
-                serializer = CategoryExpenseSerializer(exCategory, data=request.data)
+                serializer = CategoryExpenseSerializer(exCategory, data=request.data, partial = True)
                 if serializer.is_valid():
                     serializer.save()
                     return Response(serializer.data, status=status.HTTP_200_OK)

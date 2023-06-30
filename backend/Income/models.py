@@ -14,8 +14,8 @@ class Income(models.Model):
     note = models.TextField(null=True, blank=True)
     
     
-    # def __str__(self) -> str:
-    #     return self.user
+    def __str__(self) -> str:
+        return self.user
     
     @staticmethod
     def get_income_total(from_date, to_date, user):
@@ -26,7 +26,7 @@ class Income(models.Model):
         else:
             filtered_income = (
                 Income.objects.filter(user=user)
-                .filter(date__range=(from_date, to_date))
+                .filter(created_Date__range=(from_date, to_date))
                 .order_by("-id")
             )
             income_sum = round((sum(income.amount for income in filtered_income)), 2)
