@@ -25,5 +25,8 @@ urlpatterns = [
 
     # === Adding urls of Income Category
     path('expensesCat/',include('Expenses_Category.urls')),
+    
+    # === Core ====
+    path("core/", include("Core.urls", namespace="core")),
 
 ]

@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     'Expenses',
     'Expenses_Category',
     
-    # 'Core',
+    'Core',
 ]
 
 MIDDLEWARE = [
