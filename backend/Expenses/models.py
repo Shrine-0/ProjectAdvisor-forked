@@ -2,7 +2,7 @@ from django.db import models
 from users.models import myUser
 from Income.models import Income
 from Expenses_Category.models import ExpensesCategory
-from datetime import timedelta, datetime
+from datetime import date, timedelta, datetime
 
 # imporrting from Core Model
 from Core.contstants import today, one_week_ago, current_month
@@ -43,6 +43,18 @@ class Expenses(models.Model):
             )
             return expense_sum
         
+    
+    ### perday Expenses Details
+    @staticmethod
+    def get_expenses_today(user):
+        data = []
+        today = datetime.today()
+        expenses_today = Expenses.objects.filter(user=user, created_date=today)
+        total_amount = sum(expense.amount for expense in expenses_today)
+        data.append({"date": today.date(), "amount": total_amount})
+        return data
+        
+    
     ## Retrieving last week's expenses
     @staticmethod
     def get_expenses_daily_for_the_week(user):
@@ -66,6 +78,9 @@ class Expenses(models.Model):
         
         
     #     return filtered
+    
+    
+    ### Retriving Expenses data from a month
     @staticmethod
     def get_expenses_last_month(user):
         data = []
@@ -81,7 +96,7 @@ class Expenses(models.Model):
 
         
     
-    ## Retrieving Monthly data 
+    ## Retrieving past 12 Months' data 
     @staticmethod
     def get_expenses_monthly_for_the_year(user):
         data = []
@@ -95,71 +110,149 @@ class Expenses(models.Model):
     
     
     
-    ## Unknown
-    # @staticmethod
-    # def get_net_expenses_for_the_month(user):
-    #     total_expenses = Expenses.objects.filter(user=user).filter(
-    #         created_date__month=str(current_month)
-    #     )
-    #     expense_count = (
-    #         Expenses.objects.filter(user=user)
-    #         .filter(created_date__month=str(current_month))
-    #         .all()
-    #         .count()
-    #     )
-    #     expense_sum = round((sum(expense.amount for expense in total_expenses)), 2)
-    #     total_income = Income.objects.filter(user=user).filter(
-    #         created_Date__month=str(current_month)
-    #     )
-    #     income_count = (
-    #         Income.objects.filter(user=user)
-    #         .filter(created_Date__month=str(current_month))
-    #         .all()
-    #         .count()
-    #     )
-    #     income_sum = round((sum(income.amount for income in total_income)), 2)
-    #     net_value = round((income_sum - expense_sum), 2)
-    #     data = (
-    #         {
-    #             "expense": expense_sum,
-    #             "income": income_sum,
-    #             "net": net_value,
-    #             "incomeCount": income_count,
-    #             "expenseCount": expense_count,
-    #         },
-    #     )
-
-    #     return data
     
     
+    
+    
+    ### Per Day Net Expenses
     @staticmethod
-    def get_net_expenses_for_the_month(user):
-        total_expenses = Expenses.objects.filter(user=user).filter(
-            created_date__month=str(current_month)
-        )
-        expense_sum = round((sum(expense.amount for expense in total_expenses)), 2)
-        expense_names = [expense.name for expense in total_expenses]  # Get expense names
-        
-        total_income = Income.objects.filter(user=user).filter(
-            created_Date__month=str(current_month)
-        )
-        income_sum = round((sum(income.amount for income in total_income)), 2)
-        income_names = [income.incCategory for income in total_income]  # Get income names
-        
-        net_value = round((income_sum - expense_sum), 2)
-        
+    def get_net_expenses_per_day(user):
+        today = datetime.today()
+
+        total_expenses = Expenses.objects.filter(user=user, created_date =today)
+        expense_sum = round(sum(expense.amount for expense in total_expenses), 2)
+        expense_names = [str(expense.name) for expense in total_expenses]  # Convert expense names to strings
+
+        total_income = Income.objects.filter(user=user, created_Date=today)
+        income_sum = round(sum(income.amount for income in total_income), 2)
+        income_names = [str(income.incCategory) for income in total_income]  # Convert income names to strings
+
+        net_value = round(income_sum - expense_sum, 2)
+
         data = {
+            "date": today.date(),
             "expense": {
                 "total": expense_sum,
-                "count": len(total_expenses),
-                "names": expense_names,  # Include expense names in the response
+                "expenses_count": len(total_expenses),
+                "expenses_names": expense_names,  # Include expense names in the response
             },
             "income": {
                 "total": income_sum,
-                "count": len(total_income),
-                "names": income_names,  # Include income names in the response
+                "income_count": len(total_income),
+                "income_names": income_names,  # Include income names in the response
             },
-            "net": net_value,
+            "net_total": net_value,
+        }
+
+        return data
+    
+    
+    
+    
+    ## Weekly Net Expenses
+    @staticmethod
+    def get_net_expenses_per_week(user):
+        today = datetime.today()
+        start_of_week = today - timedelta(days=today.weekday())
+        end_of_week = start_of_week + timedelta(days=6)
+
+        total_expenses = Expenses.objects.filter(user=user, created_date__range=[start_of_week, end_of_week])
+        expense_sum = round(sum(expense.amount for expense in total_expenses), 2)
+        expense_names = [str(expense.name) for expense in total_expenses]  # Convert expense names to strings
+
+        total_income = Income.objects.filter(user=user, created_Date__range=[start_of_week, end_of_week])
+        income_sum = round(sum(income.amount for income in total_income), 2)
+        income_names = [str(income.incCategory) for income in total_income]  # Convert income names to strings
+
+        net_value = round(income_sum - expense_sum, 2)
+
+        data = {
+            "start_date": {
+                "Start Date": start_of_week.date(),
+                
+            },
+            "end_date": {
+                "End Date": end_of_week.date(), 
+            },
+            "expense": {
+                "total": expense_sum,
+                "expenses_count": len(total_expenses),
+                "expenses_names": expense_names,  # Include expense names in the response
+            },
+            "income": {
+                "total": income_sum,
+                "income_count": len(total_income),
+                "income_names": income_names,  # Include income names in the response
+            },
+            "net_total": net_value,
+        }
+
+        return data
+    
+    
+    
+    ### Monthly Net Expenses
+    @staticmethod
+    def get_net_expenses_for_the_month(user):
+        total_expenses = Expenses.objects.filter(user=user, created_date__month=str(current_month))
+        expense_sum = round(sum(expense.amount for expense in total_expenses), 2)
+        expense_names = [str(expense.name) for expense in total_expenses]  # Convert expense names to strings
+
+        total_income = Income.objects.filter(user=user, created_Date__month=str(current_month))
+        income_sum = round(sum(income.amount for income in total_income), 2)
+        income_names = [str(income.incCategory) for income in total_income]  # Convert income names to strings
+
+        net_value = round(income_sum - expense_sum, 2)
+
+        data = {
+            "date":{
+                "Date": current_month,
+                },
+            "expense": {
+                "total": expense_sum,
+                "Expenses count": len(total_expenses),
+                "Expenses names": expense_names,  # Include expense names in the response
+            },
+            "income": {
+                "total": income_sum,
+                "Income count": len(total_income),
+                "Income names": income_names,  # Include income names in the response
+            },
+            "Net Total": net_value,
+        }
+
+        return data
+    
+    
+    @staticmethod
+    def get_net_expenses_per_year(user):
+        today = date.today()
+        start_of_year = date(today.year, 1, 1)
+        end_of_year = date(today.year, 12, 31)
+
+        total_expenses = Expenses.objects.filter(user=user, created_date__range=[start_of_year, end_of_year])
+        expense_sum = round(sum(expense.amount for expense in total_expenses), 2)
+        expense_names = [str(expense.name) for expense in total_expenses]  # Convert expense names to strings
+
+        total_income = Income.objects.filter(user=user, created_Date__range=[start_of_year, end_of_year])
+        income_sum = round(sum(income.amount for income in total_income), 2)
+        income_names = [str(income.incCategory) for income in total_income]  # Convert income names to strings
+
+        net_value = round(income_sum - expense_sum, 2)
+
+        data = {
+            "year": today.year,
+            "expense": {
+                "total": expense_sum,
+                "expenses_count": len(total_expenses),
+                "expenses_names": expense_names,  # Include expense names in the response
+            },
+            "income": {
+                "total": income_sum,
+                "income_count": len(total_income),
+                "income_names": income_names,  # Include income names in the response
+            },
+            "net_total": net_value,
         }
 
         return data
