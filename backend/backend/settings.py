@@ -6,6 +6,7 @@ import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 # Quick-start development settings - unsuitable for production
@@ -49,6 +50,8 @@ INSTALLED_APPS = [
     # === Expenses and Category ===
     'Expenses',
     'Expenses_Category',
+    
+    # 'Core',
 ]
 
 MIDDLEWARE = [
@@ -82,6 +85,11 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'backend.wsgi.application'
+
+
+
+## Adding Media
+MEDIA_URL = '/media/'
 
 
 # === SQL DATABASE
@@ -208,7 +216,7 @@ SIMPLE_JWT = {
 PASSWORD_RESET_TIMEOUT = 500 #for 500 seconds
 
 # ==== Adding the origins to allow the domains =====
-CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ALLOWED_ORIGINS = [
     

@@ -4,7 +4,7 @@ from .models import ExpensesCategory
 
 @admin.register(ExpensesCategory)
 class ExpensesCategoryAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'user', 'date']
+    list_display = ['id', 'name', 'user', 'image', 'date']
     
     
     # Rename the model name displayed in the admin site

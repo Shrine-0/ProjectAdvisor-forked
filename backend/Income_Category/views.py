@@ -32,7 +32,7 @@ class CategoryListView(APIView):
     def post(self, request):
         try:
             data = request.data
-            incCategory = IncomeCategory.objects.create(name=data["name"], user=request.user)
+            incCategory = IncomeCategory.objects.create(name=data["name"],image=data["image"], user=request.user)
             serializer = CategoryIncomeSerializer(incCategory, many=False)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except:
@@ -71,7 +71,7 @@ class CategoryDetailView(APIView):
         incCategory = self.get_object(pk)
         if request.user == incCategory.user:
             try:
-                serializer = CategoryIncomeSerializer(incCategory, data=request.data)
+                serializer = CategoryIncomeSerializer(incCategory, data=request.data, partial=True)
                 if serializer.is_valid():
                     serializer.save()
                     return Response(serializer.data, status=status.HTTP_200_OK)
