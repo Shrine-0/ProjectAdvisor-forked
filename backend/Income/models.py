@@ -21,7 +21,7 @@ class Income(models.Model):
     
     
     def __str__(self) -> str:
-        return self.user
+        return str(self.user)
     
     
     ## For gettign the Custom range of Income details

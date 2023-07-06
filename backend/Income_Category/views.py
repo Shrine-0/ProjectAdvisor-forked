@@ -21,6 +21,10 @@ class CategoryListView(APIView):
             incCategory = IncomeCategory.objects.filter(user=request.user)
             serializer = CategoryIncomeSerializer(incCategory, many=True)
             data = {"filtered": serializer.data}
+            # Add image URLs to the response data
+            for category in data["filtered"]:
+                category["image_url"] = request.build_absolute_uri(category["image"])
+
             return Response(data, status=status.HTTP_200_OK)
 
         except:
@@ -55,7 +59,9 @@ class CategoryDetailView(APIView):
         if request.user == incCategory.user:
             try:
                 serializer = CategoryIncomeSerializer(incCategory)
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                data = serializer.data
+                data["image_url"] = request.build_absolute_uri(data["image"])
+                return Response(data, status=status.HTTP_200_OK)
             except:
                 return Response(
                     data={"message": "Unable to get category detail"},
