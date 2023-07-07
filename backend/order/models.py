@@ -3,6 +3,8 @@ from django.db import models
 from users.models import myUser
 
 from product.models import Product
+    
+
 
 class PaymentStatus(models.TextChoices):
     Paid = "Paid"
@@ -26,6 +28,13 @@ class Order(models.Model):
     
     def __str__(self):
         return '{:}'.format(self.id)
+    
+class UserSubscription(models.Model):
+    user = models.OneToOneField(myUser,on_delete=models.CASCADE)
+    can_order=models.BooleanField(default=True)
+    
+    def __str__(self):
+        return "{:}".format(self.user)
     
 # class OrderItem(models.Model):
 #     product  = models.ForeignKey(Product,on_delete=models.SET_NULL,null=True)

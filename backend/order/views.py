@@ -3,7 +3,7 @@ from django.views import View
 from django.shortcuts import get_object_or_404, render
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework.permissions import IsAuthenticated,IsAdminUser
-from order.models import Order
+from order.models import Order,UserSubscription
 from order.serializers import OrderSerializers
 from rest_framework.response import Response
 from rest_framework import status
@@ -12,6 +12,7 @@ import stripe
 from backend.settings import STRIPE_PRIVATE_KEY,STRIPE_WEBHOOK_SECERET
 from utils.helpers import get_current_host
 from django.contrib.auth.models import User
+from users.models import myUser
 
 @api_view(["GET"])
 def get_order(request):
@@ -27,7 +28,7 @@ def add_order(request):
     user = request.user #! -- User authentication- ------------- --------------->
     print("user",user)
     data = request.data
-    
+    user_subscription,created = UserSubscription.objects.get_or_create(user=user)
     orders = data['order']
     
     if orders and len(orders) == 0:
@@ -40,7 +41,8 @@ def add_order(request):
             total_amount = sum(i['price'] * i['quantity'] for i in orders)
             product_id=i['product']
             products = Product.objects.get(id = product_id)
-            if Order.objects.filter(user=user,product=products).exists():
+            
+            if not user_subscription.can_order :
                 return Response({"Details":f"User already made the order for Product ID : {product_id}"},status=status.HTTP_401_UNAUTHORIZED)
         
             order = Order.objects.create(
@@ -133,7 +135,8 @@ def create_checkout_session(request):
 def stripe_webhook(request):  
     webhook_secret = "whsec_599dbf3f66bece9e8b11c8c2c8bc3927fa67d82a15bf76a8fc1b85b70652aff0"
     payload = request.body
-    print(Response(payload))
+    # print(payload)
+    # print(Response(payload))
     sig_header = request.META['HTTP_STRIPE_SIGNATURE']
     # print("sig_header",sig_header)
     event = None
@@ -149,6 +152,7 @@ def stripe_webhook(request):
     except stripe.error.SignatureVerificationError as e:
         return Response({"error":"Invalid Signature - SignatureVerificationError"},status = status.HTTP_400_BAD_REQUEST)
     
+    #! =============== Creating the actual order and payment ================ #
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
         
@@ -172,6 +176,7 @@ def stripe_webhook(request):
             
             try:
                 user_id = session["metadata"]["user"]
+                print("userid ",user_id)
                 
             except Exception as e :
                 print(e)
@@ -193,7 +198,7 @@ def stripe_webhook(request):
             
             try:
                 item = Order.objects.create(  
-                user = User(session.metadata.user),
+                user = myUser(session.metadata.user),
                 total_amount = price,
                 payment_mode = "Card",
                 payment_status = "Paid",
@@ -225,7 +230,42 @@ def stripe_webhook(request):
                 print("error in line 213")
                 return Response({"error":"error in line 213","Error":str(e)},status = status.HTTP_400_BAD_REQUEST)
             
+        print("Payment Successfull")
         return Response({'details':'Payment successful'})
+    
     else:
         return Response({"error": f"Unhandled event type: {event['type']}"},status=status.HTTP_400_BAD_REQUEST)
+    
+    #! ======= order status Update not working ==============>
+    # try:
+    #     print("EE")
+    #     print("event",event['type'])
+        
+    #     if event['type'] == 'customer.subscription.updated':
+    #         subscription = event['data']['object']
+    #         user_id = subscription['metadata']['user']
+    #         user = myUser.objects.get(id=user_id)
+            
+    #         try:
+    #             user_subscription,created = UserSubscription.objects.get_or_create(user=user)
+                
+    #         except Exception as e:
+    #             print("Error in user_subscription")
+    #             return Response("Error in user_subscription")
+
+    #         if subscription['status'] in ['inactive', 'canceled']:
+    #             # Update the user's ability to place orders here
+    #             user_subscription.can_order = True
+    #             user.save()
+                
+    #         elif subscription['status'] == 'active':
+    #             # If the subscription is active, the user can't place orders
+    #             user_subscription.can_order = False
+    #             user_subscription.save()
+                
+    # except Exception as e:
+    #     print({"details":"error in order status update"})
+    #     return Response({"details":"error in order status"},status=status.HTTP_400_BAD_REQUEST)
+    
+            
 
