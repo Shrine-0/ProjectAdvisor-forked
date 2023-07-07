@@ -3,6 +3,9 @@ from datetime import timedelta
 from pathlib import Path
 from decouple import config
 import os
+import dotenv
+
+dotenv.load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,22 +35,25 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     
-    # ==== Adding corsheaders =====
+    #! ==== Adding corsheaders =====
     'corsheaders',
     
-    # rest_framework and Simple_JWT
+    #! rest_framework and Simple_JWT
     'rest_framework',
     'rest_framework_simplejwt',
     
-    #local
+    #!local
     'users',
     
-    # === Income and Category ===
+    #! === Income and Category ===
     'Income_Category',
     'Income',
     
+    #! === Subscription (Order and Product)===
+    'order.apps.OrderConfig',
+    'product.apps.ProductConfig',
     
-    # === Expenses and Category ===
+    #! === Expenses and Category ===
     'Expenses',
     'Expenses_Category',
     
@@ -71,7 +77,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR/"templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -221,3 +227,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOWED_ORIGINS = [
     
 ]
+
+STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
+STRIPE_PRIVATE_KEY = os.getenv("STRIPE_PRIVATE_KEY")
+STRIPE_WEBHOOK_SECERET = os.getenv("STRIPE_WEBHOOK_SECERET")
