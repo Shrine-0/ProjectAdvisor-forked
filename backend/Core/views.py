@@ -21,98 +21,234 @@ from rest_framework.exceptions import NotFound
 from django.db.models import Sum
 
 
-
-from datetime import date, timedelta
-
-
+from calendar import monthrange, month_name
+from datetime import date, timedelta, datetime
 
 
 
-## ## Retrives a custom date's expenses on each Category
-
-from datetime import datetime
-
-class QueryCategoryCustomView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        try:
-            start_date_str = request.GET.get('start_date')
-            end_date_str = request.GET.get('end_date')
-            
-            # Convert start_date and end_date strings to datetime objects
-            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-            
-            categories = ExpensesCategory.objects.filter(user=request.user).filter(
-                date__range=[start_date, end_date]
-            )
-            
-            data = []
-            for category in categories:
-                total_amount = Expenses.objects.filter(
-                    user=request.user,
-                    exCategory=category,
-                    created_date__range=[start_date, end_date]
-                ).aggregate(total=Sum('amount'))['total']
-                data.append({"Date":category.date,"exCategory": category.name, "amount": total_amount})
-            
-            return Response({"filtered": data}, status=status.HTTP_200_OK)
-        
-        except ExpensesCategory.DoesNotExist:
-            return Response(
-                data={"message": "No categories found for the specified date range."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        except ValueError:
-            return Response(
-                data={"message": "Invalid date format. Please provide the date in 'YYYY-MM-DD' format."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        except:
-            return Response(
-                data={"message": "Unable to group by categories"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
 
-## Retrives a week's expenses on each Category
-class QueryCategoryWeekView(APIView):
+
+### === FOr Income Category ===
+## Retrives Today's Income on each category
+class QueryIncomeCategoryDayView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         try:
             current_date = date.today()  # Get the current date
-            start_date = current_date - timedelta(days=current_date.weekday())  # Get the start date of the week
-            end_date = start_date + timedelta(days=6)  # Get the end date of the week
+            income_ids = Income.objects.filter(user=request.user, created_Date=current_date).values_list('incCategory', flat=True)
             
-            print("Start date", start_date)
-            print("End date", end_date)
-            
-            categories = ExpensesCategory.objects.filter(user=request.user).filter(
-                date__range=[start_date, end_date]
-            )
-            
+            categories = IncomeCategory.objects.filter(user=request.user, id__in=income_ids)
             data = []
             for category in categories:
-                total_amount = Expenses.objects.filter(
+                total_amount = Income.objects.filter(
                     user=request.user,
-                    exCategory=category,
-                    created_date__range=[start_date, end_date]
+                    incCategory=category,
+                    created_Date=current_date
                 ).aggregate(total=Sum('amount'))['total']
-                data.append({"Date":category.date,"exCategory": category.name, "amount": total_amount})
+                data.append({"Date": current_date, "incCategory": category.name, "amount": total_amount})
             
             return Response({"filtered": data}, status=status.HTTP_200_OK)
         
-        except ExpensesCategory.DoesNotExist:
+        except IncomeCategory.DoesNotExist:
+            return Response(
+                data={"message": "No categories found for the current date."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except:
+            return Response(
+                data={"message": "Unable to group by Income categories"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+## Retrives Weekly Income on each category
+class QueryIncomeCategoryWeekView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            current_date = date.today()  # Get the current date
+            start_date = current_date - timedelta(days=current_date.weekday())  # Calculate the start of the current week
+            end_date = start_date + timedelta(days=6)  # Calculate the end of the current week
+
+            income_ids = Income.objects.filter(user=request.user, created_Date__range=[start_date, end_date]).values_list('incCategory', flat=True)
+
+            categories = IncomeCategory.objects.filter(user=request.user, id__in=income_ids)
+            data = []
+            for category in categories:
+                total_amount = Income.objects.filter(
+                    user=request.user,
+                    incCategory=category,
+                    created_Date__range=[start_date, end_date]
+                ).aggregate(total=Sum('amount'))['total']
+                data.append({"Start Date": start_date, "End Date": end_date, "incCategory": category.name, "amount": total_amount})
+
+            return Response({"filtered": data}, status=status.HTTP_200_OK)
+
+        except IncomeCategory.DoesNotExist:
             return Response(
                 data={"message": "No categories found for the current week."},
                 status=status.HTTP_404_NOT_FOUND,
             )
         except:
             return Response(
-                data={"message": "Unable to group by categories"},
+                data={"message": "Unable to group by Income categories"},
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+## Retrives Monthly Income on each category
+class QueryIncomeCategoryMonthView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            current_date = date.today()  # Get the current date
+            start_date = date(current_date.year, current_date.month, 1)  # Calculate the start of the current month
+            end_date = date(current_date.year, current_date.month, monthrange(current_date.year, current_date.month)[1])  # Calculate the end of the current month
+
+            income_ids = Income.objects.filter(user=request.user, created_Date__range=[start_date, end_date]).values_list('incCategory', flat=True)
+
+            categories = IncomeCategory.objects.filter(user=request.user, id__in=income_ids)
+            data = []
+            for category in categories:
+                total_amount = Income.objects.filter(
+                    user=request.user,
+                    incCategory=category,
+                    created_Date__range=[start_date, end_date]
+                ).aggregate(total=Sum('amount'))['total']
+                data.append({"Month": month_name[current_date.month], "Start Date": start_date, "End Date": end_date, "incCategory": category.name, "amount": total_amount})
+
+            return Response({"filtered": data}, status=status.HTTP_200_OK)
+
+        except IncomeCategory.DoesNotExist:
+            return Response(
+                data={"message": "No categories found for the current month."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except:
+            return Response(
+                data={"message": "Unable to group by Income categories"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+
+## Retrives Yearly Income on each category
+class QueryIncomeCategoryYearView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            current_year = date.today().year  # Get the current year
+            start_date = date(current_year, 1, 1)  # Calculate the start of the current year
+            end_date = date(current_year, 12, 31)  # Calculate the end of the current year
+
+            income_ids = Income.objects.filter(user=request.user, created_Date__range=[start_date, end_date]).values_list('incCategory', flat=True)
+
+            categories = IncomeCategory.objects.filter(user=request.user, id__in=income_ids)
+            data = []
+            for category in categories:
+                total_amount = Income.objects.filter(
+                    user=request.user,
+                    incCategory=category,
+                    created_Date__range=[start_date, end_date]
+                ).aggregate(total=Sum('amount'))['total']
+                data.append({"Year": current_year, "Start Date": start_date, "End Date": end_date, "incCategory": category.name, "amount": total_amount})
+
+            return Response({"filtered": data}, status=status.HTTP_200_OK)
+
+        except IncomeCategory.DoesNotExist:
+            return Response(
+                data={"message": "No categories found for the current year."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except:
+            return Response(
+                data={"message": "Unable to group by Income categories"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+
+## Retrives Custom Income on each category
+class QueryIncomeCategoryCustomView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            start_date_str = request.GET.get('start_date')  # Get the start date from the URL query parameters
+            end_date_str = request.GET.get('end_date')  # Get the end date from the URL query parameters
+
+            # Parse the start and end dates from the string format to date objects
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+
+            income_ids = Income.objects.filter(user=request.user, created_Date__range=[start_date, end_date]).values_list('incCategory', flat=True)
+
+            categories = IncomeCategory.objects.filter(user=request.user, id__in=income_ids)
+            data = []
+            for category in categories:
+                total_amount = Income.objects.filter(
+                    user=request.user,
+                    incCategory=category,
+                    created_Date__range=[start_date, end_date]
+                ).aggregate(total=Sum('amount'))['total']
+                data.append({"Start Date": start_date, "End Date": end_date, "incCategory": category.name, "amount": total_amount})
+
+            return Response({"filtered": data}, status=status.HTTP_200_OK)
+
+        except IncomeCategory.DoesNotExist:
+            return Response(
+                data={"message": "No categories found for the specified date range."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except:
+            return Response(
+                data={"message": "Unable to group by Income categories"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+
+### === FOr Expenses Category
+## ## Retrives a custom date's expenses on each Category
+class QueryCategoryCustomView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            start_date_str = request.query_params.get('start_date')
+            end_date_str = request.query_params.get('end_date')
+
+            # Convert the start date and end date strings to datetime objects
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+
+            expenses_ids = Expenses.objects.filter(user=request.user, created_date__range=[start_date, end_date]).values_list('exCategory', flat=True)
+
+            categories = ExpensesCategory.objects.filter(user=request.user, id__in=expenses_ids)
+            data = []
+            for category in categories:
+                total_amount = Expenses.objects.filter(
+                    user=request.user,
+                    exCategory=category,
+                    created_date__range=[start_date, end_date]
+                ).aggregate(total=Sum('amount'))['total']
+                data.append({"Start Date": start_date, "End Date": end_date, "exCategory": category.name, "amount": total_amount})
+
+            return Response({"filtered": data}, status=status.HTTP_200_OK)
+
+        except (ExpensesCategory.DoesNotExist, ValueError):
+            return Response(
+                data={"message": "Invalid date range or no categories found."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except:
+            return Response(
+                data={"message": "Unable to group by categories"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 ## Retrives Today's expenses on each category
@@ -122,11 +258,9 @@ class QueryCategoryDayView(APIView):
     def get(self, request):
         try:
             current_date = date.today()  # Get the current date
+            expenses_ids = Expenses.objects.filter(user=request.user, created_date=current_date).values_list('exCategory', flat=True)
             
-            categories = ExpensesCategory.objects.filter(user=request.user).filter(
-                date=current_date
-            )
-            
+            categories = ExpensesCategory.objects.filter(user=request.user, id__in=expenses_ids)
             data = []
             for category in categories:
                 total_amount = Expenses.objects.filter(
@@ -134,7 +268,7 @@ class QueryCategoryDayView(APIView):
                     exCategory=category,
                     created_date=current_date
                 ).aggregate(total=Sum('amount'))['total']
-                data.append({"Date":category.date, "exCategory": category.name, "amount": total_amount})
+                data.append({"Date": current_date, "exCategory": category.name, "amount": total_amount})
             
             return Response({"filtered": data}, status=status.HTTP_200_OK)
         
@@ -149,6 +283,42 @@ class QueryCategoryDayView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+## Retrives a week's expenses on each Category
+class QueryCategoryWeekView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            current_date = date.today()  # Get the current date
+            start_date = current_date - timedelta(days=current_date.weekday())  # Calculate the start of the current week
+            end_date = start_date + timedelta(days=6)  # Calculate the end of the current week
+
+            expenses_ids = Expenses.objects.filter(user=request.user, created_date__range=[start_date, end_date]).values_list('exCategory', flat=True)
+
+            categories = ExpensesCategory.objects.filter(user=request.user, id__in=expenses_ids)
+            data = []
+            for category in categories:
+                total_amount = Expenses.objects.filter(
+                    user=request.user,
+                    exCategory=category,
+                    created_date__range=[start_date, end_date]
+                ).aggregate(total=Sum('amount'))['total']
+                data.append({"Start Date": start_date, "End Date": end_date, "exCategory": category.name, "amount": total_amount})
+
+            return Response({"filtered": data}, status=status.HTTP_200_OK)
+
+        except ExpensesCategory.DoesNotExist:
+            return Response(
+                data={"message": "No categories found for the current week."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except:
+            return Response(
+                data={"message": "Unable to group by categories"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
 
 ## THis View allows you to retrive your expenses on each category in a month
 class QueryCategoryMonthView(APIView):
@@ -156,22 +326,24 @@ class QueryCategoryMonthView(APIView):
 
     def get(self, request):
         try:
+            current_date = date.today()  # Get the current date
+            start_date = date(current_date.year, current_date.month, 1)  # Calculate the start of the current month
+            end_date = date(current_date.year, current_date.month, monthrange(current_date.year, current_date.month)[1])  # Calculate the end of the current month
 
-            categories = ExpensesCategory.objects.filter(user=request.user).filter(
-                date__month=str(current_month)
-            )
-            
+            expenses_ids = Expenses.objects.filter(user=request.user, created_date__range=[start_date, end_date]).values_list('exCategory', flat=True)
+
+            categories = ExpensesCategory.objects.filter(user=request.user, id__in=expenses_ids)
             data = []
             for category in categories:
                 total_amount = Expenses.objects.filter(
                     user=request.user,
                     exCategory=category,
-                    created_date__month=current_month
+                    created_date__range=[start_date, end_date]
                 ).aggregate(total=Sum('amount'))['total']
-                data.append({"Date":category.date,"exCategory": category.name, "amount": total_amount})
-            
+                data.append({"Month": month_name[current_date.month],"Start Date": start_date, "End Date": end_date, "exCategory": category.name, "amount": total_amount})
+
             return Response({"filtered": data}, status=status.HTTP_200_OK)
-        
+
         except ExpensesCategory.DoesNotExist:
             return Response(
                 data={"message": "No categories found for the current month."},
@@ -190,12 +362,11 @@ class QueryCategoryYearView(APIView):
 
     def get(self, request):
         try:
-            current_year = datetime.now().year
-            
-            categories = ExpensesCategory.objects.filter(user=request.user).filter(
-                date__year=current_year
-            )
-            
+            current_year = date.today().year  # Get the current year
+
+            expenses_ids = Expenses.objects.filter(user=request.user, created_date__year=current_year).values_list('exCategory', flat=True)
+
+            categories = ExpensesCategory.objects.filter(user=request.user, id__in=expenses_ids)
             data = []
             for category in categories:
                 total_amount = Expenses.objects.filter(
@@ -203,10 +374,10 @@ class QueryCategoryYearView(APIView):
                     exCategory=category,
                     created_date__year=current_year
                 ).aggregate(total=Sum('amount'))['total']
-                data.append({"category": category.name, "amount": total_amount})
-            
+                data.append({"Year": current_year, "exCategory": category.name, "amount": total_amount})
+
             return Response({"filtered": data}, status=status.HTTP_200_OK)
-        
+
         except ExpensesCategory.DoesNotExist:
             return Response(
                 data={"message": "No categories found for the current year."},
@@ -220,6 +391,7 @@ class QueryCategoryYearView(APIView):
 
 
 
+### === Get all the Expenses or Income Details ===
 # Get all expenses for a date range(from_date and to_date on front end)
 class QueryDateRangeView(APIView):
     permission_classes = [IsAuthenticated]
@@ -261,12 +433,6 @@ class QueryDateRangeView(APIView):
             data={"message": "Invalid select parameter"},
             status=status.HTTP_400_BAD_REQUEST,
         )
-
-        # except:
-        #     return Response(
-        #         data={"message": "Results not found, Invalid parameters"},
-        #         status=status.HTTP_404_NOT_FOUND,
-        #     )
         
         except Expenses.DoesNotExist:
             raise NotFound("Expense results not found, Invalid parameters")
@@ -279,6 +445,7 @@ class QueryDateRangeView(APIView):
             raise NotFound("Error occurred while processing the request")
 
 
+### === Getting all the expenses details ===
 ## Per Day Expenses
 class QueryDayGraph(APIView):
     permission_classes = [IsAuthenticated]
@@ -349,7 +516,7 @@ class QueryYearGraph(APIView):
 
 
 
-
+### === Getting all the Income details
 ### Per DAy Income view
 class QueryDayIncomeGraph(APIView):
     permission_classes = [IsAuthenticated]
@@ -421,6 +588,8 @@ class QueryYearIncomeGraph(APIView):
             
 
 
+
+### Getting all the Net Expenses
 ## PerDay Net Expenses
 class QueryDayNetView(APIView):
     permission_classes = [IsAuthenticated]
