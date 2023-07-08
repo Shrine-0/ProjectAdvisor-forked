@@ -28,7 +28,10 @@ urlpatterns = [
     path('expensesCat/',include('Expenses_Category.urls')),
     
     # === Core ====
-    path("core/", include("Core.urls", namespace="core")),
+    path("core/", include("Core.urls", namespace="Core")),
+    
+    # === Core ====
+    path("limit/", include("Limit.urls", namespace="Limit")),
 
 ]
 

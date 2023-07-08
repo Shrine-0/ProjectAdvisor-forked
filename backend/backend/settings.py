@@ -53,6 +53,9 @@ INSTALLED_APPS = [
     
     ## === Carries all the major functionality of the project
     'Core',
+    
+    ## === Budget Limitter ===
+    'Limit',
 ]
 
 MIDDLEWARE = [
