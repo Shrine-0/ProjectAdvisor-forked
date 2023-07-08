@@ -9,10 +9,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from product.models import Product
 import stripe
-from backend.settings import STRIPE_PRIVATE_KEY,STRIPE_WEBHOOK_SECERET
+# from backend.settings import STRIPE_PRIVATE_KEY,STRIPE_WEBHOOK_SECERET
 from utils.helpers import get_current_host
 from django.contrib.auth.models import User
 from users.models import myUser
+from django.views.decorators.csrf import csrf_exempt
+from decouple import config
 
 @api_view(["GET"])
 def get_order(request):
@@ -77,7 +79,7 @@ def delete_order(request,pk):
     return Response({"order-details":f"order for id :{pk} is deleted"})
 
 
-stripe.api_key = STRIPE_PRIVATE_KEY
+stripe.api_key = config("STRIPE_PRIVATE_KEY")
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated]) #! --- authentiaction
@@ -130,10 +132,12 @@ def create_checkout_session(request):
     # print(checkout_session)
     return Response({"session":checkout_session})
 
+@csrf_exempt
 @api_view(["POST"])
 # @permission_classes([IsAdminUser])
 def stripe_webhook(request):  
-    webhook_secret = "whsec_599dbf3f66bece9e8b11c8c2c8bc3927fa67d82a15bf76a8fc1b85b70652aff0"
+    # webhook_secret = "whsec_599dbf3f66bece9e8b11c8c2c8bc3927fa67d82a15bf76a8fc1b85b70652aff0"
+    webhook_secret = config("STRIPE_WEBHOOK_SECRET")
     payload = request.body
     # print(payload)
     # print(Response(payload))
