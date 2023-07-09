@@ -17,7 +17,11 @@ from users.render.renderers import UserRenderer
 
 # ===== Importing custom token =====
 from users.token.token import get_tokens_for_user
+from rest_framework.exceptions import APIException
 
+## === For sending an email
+from django.core.mail import send_mail
+from django.conf import settings
 
 # === Creating a UserRegistrationView ====
 class UserRegistrationView(APIView):
@@ -26,16 +30,26 @@ class UserRegistrationView(APIView):
     renderer_classes = [UserRenderer]
 
     def post(self, request, format=None):
-        serializer = UserRegistrationSerializers(data=request.data)
-
-        if serializer.is_valid(raise_exception=True):
-            user = serializer.save()
-
-            # ==== calling the TOken generating function function and storing in the variable ====
-            token = get_tokens_for_user(user)
-
-            return Response({'msg': 'User Successfully Created', 'data': serializer.data}, status=status.HTTP_201_CREATED)
-
+        try:
+            serializer = UserRegistrationSerializers(data=request.data)
+    
+            if serializer.is_valid(raise_exception=True):
+                user = serializer.save()
+    
+                # ==== calling the Token generating function and storing in the variable ====
+                token = get_tokens_for_user(user)
+                
+                
+                # Send email to the user
+                subject = 'Welcome to Wallet Wizzard'
+                message = 'Thank you for signing up with Wallet Wizzard. We are excited to have you on board!'
+                send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+    
+                return Response({'msg': 'User Successfully Created', 'data': serializer.data}, status=status.HTTP_201_CREATED)
+    
+        except APIException as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
