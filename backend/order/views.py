@@ -23,6 +23,12 @@ def get_order(request):
     serializer = OrderSerializers(order,many=True)
     return Response({"Order":serializer.data})
 
+@api_view(["GET"])
+def get_single_order(request,pk):
+    order =Order.objects.filter(user_id=pk)
+    serializer = OrderSerializers(order,many = True)
+    return Response(serializer.data)
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated,])
 def add_order(request):
