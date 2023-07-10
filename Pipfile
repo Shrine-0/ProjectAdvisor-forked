@@ -13,6 +13,11 @@ django-filter = "*"
 dj-rest-auth = {extras = ["with_social"], version = "*"}
 python-decouple = "*"
 pillow = "*"
+djangorestframework-simplejwt = "*"
+cryptography = "*"
+django-cors-headers = "*"
+python-dotenv = "*"
+stripe = "*"
 
 [dev-packages]
 
