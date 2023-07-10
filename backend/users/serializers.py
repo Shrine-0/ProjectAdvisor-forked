@@ -101,7 +101,7 @@ class sendPasswordResetEmailSerializer(serializers.Serializer):
             # === Generating the PasswordResetToken ===
             token = PasswordResetTokenGenerator().make_token(user)
             print('Password Reset Token', token)
-            link = '\nhttp://localhost:3000/reset/'+uid+'/'+token+'/'
+            link = '\nhttps://reset-pass-930ffa3a0a55.herokuapp.com/reset/'+uid+'/'+token+'/'
             print('Password Reset Link', link)
             # NOTE: Send email code is written here
             body = 'Click below link to reset your password' + link
