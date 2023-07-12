@@ -102,7 +102,7 @@ def create_checkout_session(request):
     }
     checkout_order_items=[]
     for i in orders:
-        unit_amount = i["price"] * 100
+        unit_amount = i["price"] 
         print(unit_amount)
         quantity = i["quantity"]
         print(quantity)
@@ -207,6 +207,7 @@ def stripe_webhook(request):
             #     return Response({"error":"error at line 173","Error":str(e)}) 
             
             try:
+                print(user:=session.metadata.user)
                 item = Order.objects.create(  
                 user = myUser(session.metadata.user),
                 total_amount = price,
@@ -214,6 +215,7 @@ def stripe_webhook(request):
                 payment_status = "Paid",
                 product = product,
                 )
+                
                 
             except Exception as e :
                 print("creating Object model in line 190")
