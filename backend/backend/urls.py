@@ -34,8 +34,11 @@ urlpatterns = [
     # === Core ====
     path("core/", include("Core.urls", namespace="Core")),
     
-    # === Core ====
+    # === Limit ====
     path("limit/", include("Limit.urls", namespace="Limit")),
+    
+    # === #Todo ====
+    path("todo/", include("Todo.urls", namespace="todo")),
 
 ]
 

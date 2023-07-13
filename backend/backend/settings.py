@@ -66,6 +66,10 @@ INSTALLED_APPS = [
     
     ## === Budget Limitter ===
     'Limit',
+    
+    ## === # ToDO List ===
+    'Todo',
+    
 ]
 
 MIDDLEWARE = [
