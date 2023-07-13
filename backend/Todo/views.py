@@ -68,10 +68,13 @@ class TodoListDetailView(RetrieveUpdateAPIView, DestroyAPIView):
 
 ### === To fetch Receivable and Payable amount ===
 class AmountView(APIView):
+    
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         try:
-            receivable_amount = TodoList.objects.filter(type=TodoList.RECEIVABLE).aggregate(total_amount=models.Sum('amount'))['total_amount']
-            payable_amount = TodoList.objects.filter(type=TodoList.PAYABLE).aggregate(total_amount=models.Sum('amount'))['total_amount']
+            receivable_amount = TodoList.objects.filter(user=self.request.user,type=TodoList.RECEIVABLE).aggregate(total_amount=models.Sum('amount'))['total_amount']
+            payable_amount = TodoList.objects.filter(user=self.request.user, type=TodoList.PAYABLE).aggregate(total_amount=models.Sum('amount'))['total_amount']
         
             serializer = AmountSerializer({
                 'receivable_amount': receivable_amount or 0,
