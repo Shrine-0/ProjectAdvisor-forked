@@ -18,6 +18,7 @@ numpy==1.25.0
 oauthlib==3.2.2
 Pillow==9.5.0
 pipfile==0.0.2
+psycopg2==2.9.6
 pycparser==2.21
 PyJWT==2.7.0
 python-decouple==3.8
@@ -31,3 +32,4 @@ stripe==5.5.0
 toml==0.10.2
 typing_extensions==4.7.0
 urllib3==2.0.3
+whitenoise==6.5.0
