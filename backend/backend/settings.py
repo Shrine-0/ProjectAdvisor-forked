@@ -139,7 +139,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 #     }
 # }
 
-#*  === Postgres Database ===
+#*  === AZURE CLOUD BASED Postgres Database Connection===
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
