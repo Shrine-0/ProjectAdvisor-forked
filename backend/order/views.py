@@ -169,6 +169,7 @@ def stripe_webhook(request):
         line_items = stripe.checkout.Session.list_line_items(session['id'])
         
         price = session['amount_total']
+        Price = float(price/100)
         
         # print("data",line_items['data'])
         for item in line_items['data']:
@@ -207,13 +208,15 @@ def stripe_webhook(request):
             #     return Response({"error":"error at line 173","Error":str(e)}) 
             
             try:
+                actual_price = float(item.price.unit_amount / 100)
                 print(user:=session.metadata.user)
                 item = Order.objects.create(  
                 user = myUser(session.metadata.user),
-                total_amount = price,
+                total_amount = Price,
                 payment_mode = "Card",
                 payment_status = "Paid",
                 product = product,
+                price = actual_price,
                 )
                 
                 
